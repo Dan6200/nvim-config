@@ -52,7 +52,7 @@ keyset("n", "gr", "<Plug>(coc-references)", coc_opts_silent)
 
 -- Documentation
 keyset("n", "K", '<CMD>lua _G.show_docs()<CR>', coc_opts_silent)
-keyset("n", "<space>k", [[k]], coc_opts_silent)
+keyset("n", "<space>K", [[K]], coc_opts_silent)
 
 -- Symbol Renaming
 keyset("n", "<leader>rn", "<Plug>(coc-rename)", coc_opts_silent)

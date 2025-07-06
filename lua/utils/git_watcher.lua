@@ -48,11 +48,12 @@ end
 
 -- Check for uncommitted changes (including untracked files)
 function M.check_local_changes()
-	if not M.enabled or M.select_prompt_active then return end
+	notify(M.select_prompt_active)
+	if not M.enabled or M.select_prompt_active or M.input_prompt_active then return end
 
-	-- Reset unignored files tracking for new check
-	unignored_files = {}
-	M.select_prompt_active = false -- Track if we have an active prompt
+	local unignored_files = {}
+	M.select_prompt_active = false -- Track if we have an active select prompt
+	M.input_prompt_active = false -- Track if we have an active input prompt
 
 	local Job = require("plenary.job")
 
@@ -127,6 +128,7 @@ function M.check_local_changes()
 										args = { "add", next_file },
 									}):start()
 									unignored_files[next_file] = true
+									M.select_prompt_active = false
 								elseif choice == "Add to .gitignore" then
 									-- Check if already in .gitignore
 									Job:new({
@@ -143,13 +145,16 @@ function M.check_local_changes()
 										end,
 									}):start()
 									unignored_files[next_file] = true
+									M.select_prompt_active = false
 								else
 									-- Skip but don't mark as processed
-									debounce_interval = debounce_interval * 10
+									debounce_interval = debounce_interval * 2
 								end
 
-								M.select_prompt_active = false
-								process_next_file() -- Process next file after response
+								-- Start processing if no active prompt
+								if not M.select_prompt_active then
+									process_next_file() -- Process next file after response
+								end
 							end)
 						end
 
@@ -164,6 +169,7 @@ function M.check_local_changes()
 							-- Already running in vim.schedule, no need to wrap again
 							notify(message, vim.log.levels.WARN)
 
+							M.input_prompt_active = true
 							vim.ui.input({
 								prompt = "Commit message (or leave empty to skip): ",
 							}, function(msg)
@@ -193,9 +199,10 @@ function M.check_local_changes()
 											end) -- End of vim.schedule for git add
 										end, -- End of on_exit function for git add
 									}):start()
-									debounce_interval = 10000
+									debounce_interval = 1000
+									M.input_prompt_active = false
 								else
-									debounce_interval = debounce_interval * 10
+									debounce_interval = debounce_interval * 2
 								end
 							end)
 						end
@@ -204,11 +211,11 @@ function M.check_local_changes()
 			end) -- End of vim.schedule for git status
 		end, -- End of on_exit function for git status
 		-- Optional: Add on_stderr for git status errors
-		-- on_stderr = function(_, err_data)
-		--   vim.schedule(function()
-		--     if err_data then notify("Git status error: " .. err_data, vim.log.levels.ERROR) end
-		--   end)
-		-- end
+		on_stderr = function(_, err_data)
+			vim.schedule(function()
+				if err_data then notify("Git status error: " .. err_data, vim.log.levels.ERROR) end
+			end)
+		end
 	}):start()
 end
 

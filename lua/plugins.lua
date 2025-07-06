@@ -65,12 +65,12 @@ return {
 			}
 		end,
 	},
-	{ "mattn/emmet-vim",    ft = { "html", "css", "javascriptreact", "typescriptreact", "php", "handlebars" } },
+	{ "mattn/emmet-vim",           ft = { "html", "css", "javascriptreact", "typescriptreact", "php", "handlebars" } },
 	{
 		"yetone/avante.nvim",
 		event = "VeryLazy",
 		opts = {
-			provider = "deepseek_r1", -- your default provider, can switch later
+			provider = "gemini2_5_flash", -- your default provider, can switch later
 			vendors = {
 				deepseek = {
 					__inherited_from = "openai",
@@ -89,35 +89,26 @@ return {
 					model = "deepseek-reasoner",
 					disable_tools = true,
 				},
-				gemini_lite = {
-					__inherited_from = "gemini",
-					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.0-flash-lite",
-					max_tokens = 8000,
-					timeout = 300000
-				},
 				gemini2_5 = {
 					__inherited_from = "gemini",
 					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-pro-preview-03-25",
+					model = "gemini-2.5-pro",
 					max_tokens = 65536,
 					timeout = 300000
 				},
 				gemini2_5_flash = {
 					__inherited_from = "gemini",
 					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-flash-preview-04-17",
+					model = "gemini-2.5-flash",
 					max_tokens = 65536,
 					timeout = 300000,
-					disable_tools = false,
 				},
-				gemini2_5_free = {
+				gemini2_5_flash_lite = {
 					__inherited_from = "gemini",
 					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-pro-exp-03-25",
-					max_tokens = 65536,
-					timeout = 300000,
-					disable_tools = false,
+					model = "gemini-2.5-flash-lite-preview-06-17",
+					max_tokens = 8000,
+					timeout = 300000
 				},
 			},
 			-- file_selector = {
@@ -176,8 +167,10 @@ return {
 		},
 	},
 	{ "vuciv/golf" },
+	{ 'akinsho/git-conflict.nvim', version = "*",                                                                    config = true },
+	{ "sindrets/diffview.nvim" },
 	{ "tpope/vim-fugitive" },
-	{ "sonph/onehalf",      rtp = "vim" },
+	{ "sonph/onehalf",             rtp = "vim" },
 	{ "morhetz/gruvbox" },
 	{ "sickill/vim-monokai" },
 	{ "tomasr/molokai" },
