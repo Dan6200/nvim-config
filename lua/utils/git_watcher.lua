@@ -3,22 +3,19 @@ local M = {}
 M.enabled = true
 
 local vim = vim
-local debounce_interval = 10000
+local debounce_interval = 1000
 M.min_log_level = vim.log.levels.WARN
 local native_notify = vim.notify or vim.notify_once
 
+-- Track if we have an active select prompt or input prompt
+M.select_prompt_active = false
+M.input_prompt_active = false
 
 -- Improved notification system with rate limiting
 local notify = function(msg, level, opts)
 	level = level or vim.log.levels.INFO
 	if level >= M.min_log_level then
 		native_notify(msg, level, opts)
-		-- Prevent duplicate notifications within 5 seconds: Try this AI suggestion later
-		-- local now = vim.loop.now()
-		-- if not last_notification[msg] or (now - last_notification[msg] > 5000) then
-		-- 	native_notify(msg, level, opts)
-		-- 	last_notification[msg] = now
-		-- end
 	end
 end
 
@@ -38,7 +35,7 @@ local function count_changed_lines(callback)
 					total = total + tonumber(added) + tonumber(deleted)
 				end
 			end
-			-- Schedule the final callback onto the main loop
+
 			vim.schedule(function()
 				callback(total)
 			end)
@@ -46,176 +43,215 @@ local function count_changed_lines(callback)
 	}):start()
 end
 
--- Check for uncommitted changes (including untracked files)
-function M.check_local_changes()
-	notify(M.select_prompt_active)
-	if not M.enabled or M.select_prompt_active or M.input_prompt_active then return end
-
-	local unignored_files = {}
-	M.select_prompt_active = false -- Track if we have an active select prompt
-	M.input_prompt_active = false -- Track if we have an active input prompt
-
+-- New function to get git status output
+local function get_git_status_output(callback)
 	local Job = require("plenary.job")
-
-	-- Use git status --porcelain to check for any changes (modified, deleted, untracked, etc.)
 	Job:new({
 		command = "git",
 		args = { "status", "--porcelain" },
-		timeout = 5000, -- Short timeout, status should be fast
-		-- Schedule the on_exit handler to run on the main loop
+		timeout = 5000,
 		on_exit = function(status_job)
 			vim.schedule(function()
-				local status_output = status_job:result()
-				-- Check if there's any output (any line indicates a change)
-				if status_output and #status_output > 0 then
-					-- Changes detected, now get line count for notification and prompt
-					count_changed_lines(function(lines_changed)
-						-- Check if untracked files exist for a more informative message
-						local has_untracked = false
-						for _, line in ipairs(status_output) do
-							if line:match("^%?%?") then
-								has_untracked = true
-								break
-							end
-						end
-
-						local message = string.format("%d lines changed.", lines_changed)
-						if has_untracked then
-							message = message .. " Untracked files present."
-
-							-- Check if any untracked files are not in .gitignore
-							for _, line in ipairs(status_output) do
-								if line:match("^%?%?") then
-									local file = line:sub(4)
-									-- Check if file is ignored
-									local job = Job:new({
-										command = "git",
-										args = { "check-ignore", file },
-										timeout = 1000,
-									})
-									job:sync()
-									if job:result() == nil or #job:result() == 0 then
-										if not unignored_files[file] then
-											unignored_files[file] = false
-										end
-									end
-								else
-									unignored_files = {}
-								end
-							end
-						end
-
-						-- Process files one by one using a queue
-						local function process_next_file()
-							-- Find next unprocessed file
-							local next_file = nil
-							for file, checked in pairs(unignored_files) do
-								if not checked then
-									next_file = file
-									break
-								end
-							end
-
-							if not next_file then return end -- No more files to process
-
-							M.select_prompt_active = true
-							vim.ui.select({ "Add to git", "Add to .gitignore", "Skip" }, {
-								prompt = "Untracked file not in .gitignore: " .. next_file,
-							}, function(choice)
-								if choice == "Add to git" then
-									Job:new({
-										command = "git",
-										args = { "add", next_file },
-									}):start()
-									unignored_files[next_file] = true
-									M.select_prompt_active = false
-								elseif choice == "Add to .gitignore" then
-									-- Check if already in .gitignore
-									Job:new({
-										command = "git",
-										args = { "check-ignore", next_file },
-										timeout = 1000,
-										on_exit = function(j)
-											if j.code ~= 0 then -- Not ignored yet
-												Job:new({
-													command = "sh",
-													args = { "-c", "echo '/" .. next_file .. "' >> .gitignore" },
-												}):start()
-											end
-										end,
-									}):start()
-									unignored_files[next_file] = true
-									M.select_prompt_active = false
-								else
-									-- Skip but don't mark as processed
-									debounce_interval = debounce_interval * 2
-								end
-
-								-- Start processing if no active prompt
-								if not M.select_prompt_active then
-									process_next_file() -- Process next file after response
-								end
-							end)
-						end
-
-						-- Start processing if no active prompt
-						if not M.select_prompt_active then
-							process_next_file()
-						end
-
-						-- Only prompt if significant changes or untracked files exist
-						-- Adjust threshold as needed
-						if lines_changed > 150 then
-							-- Already running in vim.schedule, no need to wrap again
-							notify(message, vim.log.levels.WARN)
-
-							M.input_prompt_active = true
-							vim.ui.input({
-								prompt = "Commit message (or leave empty to skip): ",
-							}, function(msg)
-								if msg and msg ~= "" then
-									-- Stage all changes (including untracked) before committing
-									Job:new({
-										command = "git",
-										args = { "add", "." },
-										-- Schedule the on_exit handler to run on the main loop
-										on_exit = function(add_job)
-											vim.schedule(function()
-												if add_job:result() then -- Check if add was successful (basic check)
-													Job:new({
-														command = "git",
-														args = { "commit", "-m", msg },
-														-- Schedule the on_exit handler to run on the main loop
-														on_exit = function()
-															vim.schedule(function()
-																notify("Changes committed!", vim.log.levels.INFO)
-															end)
-														end,
-													}):start()
-												else
-													-- Already running in vim.schedule, no need to wrap again
-													notify("Failed to stage changes.", vim.log.levels.ERROR)
-												end
-											end) -- End of vim.schedule for git add
-										end, -- End of on_exit function for git add
-									}):start()
-									debounce_interval = 1000
-									M.input_prompt_active = false
-								else
-									debounce_interval = debounce_interval * 2
-								end
-							end)
-						end
-					end)
-				end -- End of if status_output
-			end) -- End of vim.schedule for git status
-		end, -- End of on_exit function for git status
-		-- Optional: Add on_stderr for git status errors
+				callback(status_job:result())
+			end)
+		end,
 		on_stderr = function(_, err_data)
 			vim.schedule(function()
 				if err_data then notify("Git status error: " .. err_data, vim.log.levels.ERROR) end
 			end)
 		end
+	}):start()
+end
+
+-- New function to get unignored untracked files
+local function get_unignored_untracked_files(status_output, callback)
+	local unignored_files = {}
+	local Job = require("plenary.job")
+	local untracked_candidates = {}
+
+	for _, line in ipairs(status_output) do
+		if line:match("^%?%?") then
+			table.insert(untracked_candidates, line:sub(4))
+		end
+	end
+
+	if #untracked_candidates == 0 then
+		callback({})
+		return
+	end
+
+	local processed_count = 0
+	for _, file in ipairs(untracked_candidates) do
+		Job:new({
+			command = "git",
+			args = { "check-ignore", file },
+			timeout = 1000,
+			on_exit = function(j)
+				vim.schedule(function()
+					if j.code ~= 0 then
+						unignored_files[file] = false
+					end
+					processed_count = processed_count + 1
+					if processed_count == #untracked_candidates then
+						callback(unignored_files)
+					end
+				end)
+			end,
+		}):start()
+	end
+end
+
+-- New function to handle the untracked file prompt and actions
+local function handle_untracked_file_prompt(next_file, git_root_path, on_choice_done)
+	local Job = require("plenary.job")
+	M.select_prompt_active = true
+	vim.ui.select({ "Add to git", "Add to .gitignore", "Skip", "Skip All" }, {
+		prompt = "Untracked file not in .gitignore: " .. next_file,
+	}, function(choice)
+		if choice == "Add to git" then
+			Job:new({
+				command = "git",
+				args = { "add", next_file },
+			}):start()
+			debounce_interval = 1000
+		elseif choice == "Add to .gitignore" then
+			Job:new({
+				command = "git",
+				args = { "check-ignore", next_file },
+				timeout = 1000,
+				on_exit = function(j)
+					if j.code ~= 0 then
+						local current_dir = vim.fn.getcwd()
+						local absolute_next_file_path = current_dir .. "/" .. next_file
+						local relative_to_git_root_file_path = string.gsub(absolute_next_file_path,
+							"^" .. git_root_path .. "/", "")
+						Job:new({
+							command = "sh",
+							args = { "-c", "echo '/" .. relative_to_git_root_file_path .. "' >> " .. git_root_path .. "/.gitignore" },
+						}):start()
+					end
+				end,
+			}):start()
+			debounce_interval = 1000
+		elseif choice == "Skip" then
+			debounce_interval = debounce_interval * 2
+		else -- Skip All
+			debounce_interval = debounce_interval * 2
+		end
+		M.select_prompt_active = false
+		on_choice_done(choice)
+	end)
+end
+
+-- New function to handle the commit prompt
+local function handle_commit_prompt()
+	local Job = require("plenary.job")
+	M.input_prompt_active = true
+	vim.ui.input({
+		prompt = "Commit message (or leave empty to skip): ",
+	}, function(msg)
+		if msg and msg ~= "" then
+			Job:new({
+				command = "git",
+				args = { "add", "." },
+				on_exit = function(add_job)
+					vim.schedule(function()
+						if add_job:result() then
+							Job:new({
+								command = "git",
+								args = { "commit", "-m", msg },
+								on_exit = function()
+									vim.schedule(function()
+										notify("Changes committed!", vim.log.levels.INFO)
+									end)
+								end,
+							}):start()
+						else
+							notify("Failed to stage changes.", vim.log.levels.ERROR)
+						end
+					end)
+				end,
+			}):start()
+			debounce_interval = 1000
+			M.input_prompt_active = false
+		else
+			debounce_interval = debounce_interval * 2
+			M.input_prompt_active = false
+		end
+	end)
+end
+
+-- Check for uncommitted changes (including untracked files)
+local function perform_check_local_changes(git_root_path)
+	get_git_status_output(function(status_output)
+		if status_output and #status_output > 0 then
+			count_changed_lines(function(lines_changed)
+				get_unignored_untracked_files(status_output, function(unignored_files)
+					local has_untracked = next(unignored_files) ~= nil
+
+					local message = string.format("%d lines changed.", lines_changed)
+					if has_untracked then
+						message = message .. " Untracked files present."
+					end
+
+					local function process_next_file()
+						local next_file = nil
+						for file, checked in pairs(unignored_files) do
+							if not checked then
+								next_file = file
+								break
+							end
+						end
+
+						if not next_file then return end
+
+						handle_untracked_file_prompt(next_file, git_root_path, function(choice)
+							if choice == "Skip All" then
+								for file, _ in pairs(unignored_files) do
+									unignored_files[file] = true
+								end
+							else
+								unignored_files[next_file] = true
+							end
+							if not M.select_prompt_active then
+								process_next_file()
+							end
+						end)
+					end
+
+					if not M.select_prompt_active then
+						process_next_file()
+					end
+
+					if lines_changed > 10 then
+						notify(message, vim.log.levels.WARN)
+						handle_commit_prompt()
+					end
+				end)
+			end)
+		end
+	end)
+end
+
+function M.check_local_changes()
+	notify(M.select_prompt_active)
+	if not M.enabled or M.select_prompt_active or M.input_prompt_active then return end
+
+	local Job = require("plenary.job")
+	Job:new({
+		command = "git",
+		args = { "rev-parse", "--show-toplevel" },
+		timeout = 5000,
+		on_exit = function(root_job)
+			vim.schedule(function()
+				local git_root_path = root_job:result()[1]
+				if git_root_path then
+					perform_check_local_changes(git_root_path)
+				else
+					notify("Could not determine Git repository root.", vim.log.levels.ERROR)
+				end
+			end)
+		end,
 	}):start()
 end
 

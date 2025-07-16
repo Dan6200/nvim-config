@@ -2,7 +2,7 @@
   "npm.binPath": "$HOME/.local/share/pnpm",
   "suggest.noselect": true,
   "coc.preferences.formatOnSave": true,
-  "tailwindCSS.enable": true,
+  "tailwindCSS.enable": false,
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.suggestions": true,
   "tailwindCSS.validate": true,
@@ -33,5 +33,5 @@
   ],
   "suggest.autoTrigger": "none",
   "cSpell.userWords": ["serviceusage"],
-	"python.formatting.provider":"None"
+  "python.formatting.provider": "None"
 }

@@ -47,8 +47,7 @@ keyset('n', '<leader>fx', ':!chmod +x %<CR>', opts_noremap_silent) -- Make curre
 keyset('v', '//', 'y/\\V<C-R>=escape(@",\'/\\\')<CR><CR>', opts_noremap_silent) -- Search for visual selection
 
 -- Navigation
-keyset('n', '<C-n>', '<C-f>', opts_noremap_silent) -- Remap C-n to PageDown (useful if C-f is used elsewhere)
-keyset('n', 'ge', 'ge', {})                        -- Keep default `ge` behavior (go to end of previous word)
+keyset('n', 'ge', 'ge', {}) -- Keep default `ge` behavior (go to end of previous word)
 
 -- Vimgrep
 keyset('n', '<space>V', ':Vimgrep ', { noremap = true }) -- Start Vimgrep search
@@ -66,10 +65,10 @@ keyset('n', 'k', "(v:count > 1 ? \"m'\" . v:count : '') . 'k'", { expr = true, s
 keyset('n', 'j', "(v:count > 1 ? \"m'\" . v:count : '') . 'j'", { expr = true, silent = true })
 
 -- NERDTree Mappings
-keyset('n', '<C-f><C-f>', ':NERDTreeToggle<CR>', opts_noremap_silent)
-keyset('n', '<C-f>', ':NERDTreeFocus<CR>', opts_noremap_silent)
-keyset('n', '<C-f><C-d>', ':NERDTreeFind<CR>', opts_noremap_silent)
-keyset('n', '<C-f><C-r>', ':NERDTreeRefreshRoot<CR>', opts_noremap_silent)
+keyset('n', '<C-n><C-n>', ':NERDTreeToggle<CR>', opts_noremap_silent)
+keyset('n', '<C-n>', ':NERDTreeFocus<CR>', opts_noremap_silent)
+keyset('n', '<C-n><C-k>', ':NERDTreeFind<CR>', opts_noremap_silent)
+keyset('n', '<C-n><C-l>', ':NERDTreeRefreshRoot<CR>', opts_noremap_silent)
 -- Disable '?' remap
 vim.api.nvim_create_autocmd("FileType", {
 	pattern = "nerdtree",
@@ -89,9 +88,17 @@ keyset("n", "<C-x>", ":%d+<CR>", opts_noremap_silent) -- Delete all and copy to 
 
 -- Make command mapping
 keyset('n', '<leader>q', ':make all<CR>', opts_noremap_silent)
+keyset('n', '<leader>w', ':make build<CR>', opts_noremap_silent)
+keyset('n', '<leader>e', ':make test<CR>', opts_noremap_silent)
 
 -- Close floating popups (useful for LSP/CoC popups)
 keyset('n', '<Esc><Esc>', require('utils').close_floating_popup, opts_noremap_silent)
 
 -- Remap <C-h> to <C-w>
 keyset('i', '<C-h>', '<C-w>', opts_noremap_silent)
+
+-- [ motions to be more practical
+keyset('n', ']]', '/{<CR>', opts_noremap_silent)
+keyset('n', '[[', '?{<CR>', opts_noremap_silent)
+keyset('n', '][', '/}<CR>', opts_noremap_silent)
+keyset('n', '[]', '?{<CR>', opts_noremap_silent)
