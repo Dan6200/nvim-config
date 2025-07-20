@@ -2,7 +2,7 @@
   "npm.binPath": "$HOME/.local/share/pnpm",
   "suggest.noselect": true,
   "coc.preferences.formatOnSave": true,
-  "tailwindCSS.enable": false,
+  "tailwindCSS.enable": true,
   "tailwindCSS.emmetCompletions": true,
   "tailwindCSS.suggestions": true,
   "tailwindCSS.validate": true,

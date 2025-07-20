@@ -70,8 +70,8 @@ return {
 		"yetone/avante.nvim",
 		event = "VeryLazy",
 		opts = {
-			provider = "gemini2_5_flash", -- your default provider, can switch later
-			vendors = {
+			provider = "vertex", -- your default provider, can switch later
+			providers = {
 				deepseek = {
 					__inherited_from = "openai",
 					api_key_name = "DEEPSEEK_API_KEY",
@@ -89,27 +89,27 @@ return {
 					model = "deepseek-reasoner",
 					disable_tools = true,
 				},
-				gemini2_5 = {
-					__inherited_from = "gemini",
-					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-pro",
-					max_tokens = 65536,
-					timeout = 300000
-				},
-				gemini2_5_flash = {
-					__inherited_from = "gemini",
-					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-flash",
-					max_tokens = 65536,
-					timeout = 300000,
-				},
-				gemini2_5_flash_lite = {
-					__inherited_from = "gemini",
-					api_key_name = "GEMINI_API_KEY",
-					model = "gemini-2.5-flash-lite-preview-06-17",
-					max_tokens = 8000,
-					timeout = 300000
-				},
+				-- gemini2_5 = {
+				-- 	__inherited_from = "gemini",
+				-- 	api_key_name = "GEMINI_API_KEY",
+				-- 	model = "gemini-2.5-pro",
+				-- 	max_tokens = 65536,
+				-- 	timeout = 300000
+				-- },
+				-- gemini2_5_flash = {
+				-- 	__inherited_from = "gemini",
+				-- 	api_key_name = "GEMINI_API_KEY",
+				-- 	model = "gemini-2.5-flash",
+				-- 	max_tokens = 65536,
+				-- 	timeout = 300000,
+				-- },
+				-- gemini2_5_flash_lite = {
+				-- 	__inherited_from = "gemini",
+				-- 	api_key_name = "GEMINI_API_KEY",
+				-- 	model = "gemini-2.5-flash-lite-preview-06-17",
+				-- 	max_tokens = 8000,
+				-- 	timeout = 300000
+				-- },
 			},
 			-- file_selector = {
 			-- 	provider = "fzf",

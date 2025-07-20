@@ -79,4 +79,18 @@ function git_utils.get_unignored_untracked_files(status_output, callback)
 	end
 end
 
+function git_utils.has_remote(callback)
+	local Job = require("plenary.job")
+	Job:new({
+		command = "git",
+		args = { "remote" },
+		timeout = 5000,
+		on_exit = function(j)
+			vim.schedule(function()
+				callback(#j:result() > 0)
+			end)
+		end,
+	}):start()
+end
+
 return git_utils

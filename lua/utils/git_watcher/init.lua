@@ -4,7 +4,8 @@ local vim = vim
 
 -- Global state variables
 M.enabled = true
-local debounce_interval = 1000
+INTERVAL = 2000
+local debounce_interval = INTERVAL
 M.min_log_level = vim.log.levels.WARN
 local native_notify = vim.notify or vim.notify_once
 
@@ -82,7 +83,7 @@ function M.set_log_level(log_level)
 end
 
 function M.reset_interval()
-	debounce_interval = 1000
+	debounce_interval = INTERVAL
 	notify("[GitWatcher] Debounced timer reset to " .. debounce_interval, vim.log.levels.INFO)
 end
 
