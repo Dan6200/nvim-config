@@ -72,45 +72,73 @@ return {
 		opts = {
 			provider = "vertex", -- your default provider, can switch later
 			providers = {
-				deepseek = {
-					__inherited_from = "openai",
-					api_key_name = "DEEPSEEK_API_KEY",
-					endpoint = "https://api.deepseek.com",
-					max_tokens = 8000,
-					timeout = 300000,
-					model = "deepseek-chat",
+				vertex = { model = "gemini-2.5-flash" },
+				gemini2_5_pro = {
+					__inherited_from = "gemini",
+					model = "gemini-2.5-pro",
+					timeout = 300000
 				},
-				deepseek_r1 = {
-					__inherited_from = "openai",
-					api_key_name = "DEEPSEEK_API_KEY",
-					endpoint = "https://api.deepseek.com",
-					timeout = 300000,
-					max_tokens = 8000,
-					model = "deepseek-reasoner",
-					disable_tools = true,
+				gemini2_5_flash_lite = {
+					__inherited_from = "gemini",
+					model = "gemini-2.5-flash-lite-preview-06-17",
+					timeout = 300000
 				},
-				-- gemini2_5 = {
-				-- 	__inherited_from = "gemini",
-				-- 	api_key_name = "GEMINI_API_KEY",
-				-- 	model = "gemini-2.5-pro",
-				-- 	max_tokens = 65536,
-				-- 	timeout = 300000
-				-- },
-				-- gemini2_5_flash = {
-				-- 	__inherited_from = "gemini",
-				-- 	api_key_name = "GEMINI_API_KEY",
-				-- 	model = "gemini-2.5-flash",
-				-- 	max_tokens = 65536,
-				-- 	timeout = 300000,
-				-- },
-				-- gemini2_5_flash_lite = {
-				-- 	__inherited_from = "gemini",
-				-- 	api_key_name = "GEMINI_API_KEY",
-				-- 	model = "gemini-2.5-flash-lite-preview-06-17",
-				-- 	max_tokens = 8000,
-				-- 	timeout = 300000
-				-- },
+				vertex_gemini2_5_pro = {
+					__inherited_from = "vertex",
+					model = "gemini-2.5-pro",
+					timeout = 300000
+				},
+				vertex_gemini2_5_flash_lite = {
+					__inherited_from = "vertex",
+					model = "gemini-2.5-flash-lite-preview-06-17",
+					timeout = 300000
+				},
 			},
+			mappings = {
+				sidebar = {
+					close_from_input = { normal = "q", insert = "<C-d>" },
+				},
+			},
+			-- providers = {
+			-- 	deepseek = {
+			-- 		__inherited_from = "openai",
+			-- 		api_key_name = "DEEPSEEK_API_KEY",
+			-- 		endpoint = "https://api.deepseek.com",
+			-- 		max_tokens = 8000,
+			-- 		timeout = 300000,
+			-- 		model = "deepseek-chat",
+			-- 	},
+			-- 	deepseek_r1 = {
+			-- 		__inherited_from = "openai",
+			-- 		api_key_name = "DEEPSEEK_API_KEY",
+			-- 		endpoint = "https://api.deepseek.com",
+			-- 		timeout = 300000,
+			-- 		max_tokens = 8000,
+			-- 		model = "deepseek-reasoner",
+			-- 		disable_tools = true,
+			-- 	},
+			-- gemini2_5 = {
+			-- 	__inherited_from = "gemini",
+			-- 	api_key_name = "GEMINI_API_KEY",
+			-- 	model = "gemini-2.5-pro",
+			-- 	max_tokens = 65536,
+			-- 	timeout = 300000
+			-- },
+			-- gemini2_5_flash = {
+			-- 	__inherited_from = "gemini",
+			-- 	api_key_name = "GEMINI_API_KEY",
+			-- 	model = "gemini-2.5-flash",
+			-- 	max_tokens = 65536,
+			-- 	timeout = 300000,
+			-- },
+			-- gemini2_5_flash_lite = {
+			-- 	__inherited_from = "gemini",
+			-- 	api_key_name = "GEMINI_API_KEY",
+			-- 	model = "gemini-2.5-flash-lite-preview-06-17",
+			-- 	max_tokens = 8000,
+			-- 	timeout = 300000
+			-- },
+			-- },
 			-- file_selector = {
 			-- 	provider = "fzf",
 			-- 	provider_opts = {

@@ -84,7 +84,7 @@ end
 
 function M.reset_interval()
 	debounce_interval = INTERVAL
-	notify("[GitWatcher] Debounced timer reset to " .. debounce_interval, vim.log.levels.INFO)
+	notify("[GitWatcher] Debounced timer reset to " .. debounce_interval, vim.log.levels.WARN)
 end
 
 function M.start_watcher()
