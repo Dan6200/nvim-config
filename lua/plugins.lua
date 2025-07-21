@@ -73,6 +73,11 @@ return {
 			provider = "vertex", -- your default provider, can switch later
 			providers = {
 				vertex = { model = "gemini-2.5-flash" },
+				gemini2_5_flash = {
+					__inherited_from = "gemini",
+					model = "gemini-2.5-flash",
+					timeout = 300000
+				},
 				gemini2_5_pro = {
 					__inherited_from = "gemini",
 					model = "gemini-2.5-pro",
@@ -94,72 +99,28 @@ return {
 					timeout = 300000
 				},
 			},
+			deepseek = {
+				__inherited_from = "openai",
+				api_key_name = "DEEPSEEK_API_KEY",
+				endpoint = "https://api.deepseek.com",
+				max_tokens = 8000,
+				timeout = 300000,
+				model = "deepseek-chat",
+			},
+			deepseek_r1 = {
+				__inherited_from = "openai",
+				api_key_name = "DEEPSEEK_API_KEY",
+				endpoint = "https://api.deepseek.com",
+				timeout = 300000,
+				max_tokens = 8000,
+				model = "deepseek-reasoner",
+				disable_tools = true,
+			},
 			mappings = {
 				sidebar = {
 					close_from_input = { normal = "q", insert = "<C-d>" },
 				},
 			},
-			-- providers = {
-			-- 	deepseek = {
-			-- 		__inherited_from = "openai",
-			-- 		api_key_name = "DEEPSEEK_API_KEY",
-			-- 		endpoint = "https://api.deepseek.com",
-			-- 		max_tokens = 8000,
-			-- 		timeout = 300000,
-			-- 		model = "deepseek-chat",
-			-- 	},
-			-- 	deepseek_r1 = {
-			-- 		__inherited_from = "openai",
-			-- 		api_key_name = "DEEPSEEK_API_KEY",
-			-- 		endpoint = "https://api.deepseek.com",
-			-- 		timeout = 300000,
-			-- 		max_tokens = 8000,
-			-- 		model = "deepseek-reasoner",
-			-- 		disable_tools = true,
-			-- 	},
-			-- gemini2_5 = {
-			-- 	__inherited_from = "gemini",
-			-- 	api_key_name = "GEMINI_API_KEY",
-			-- 	model = "gemini-2.5-pro",
-			-- 	max_tokens = 65536,
-			-- 	timeout = 300000
-			-- },
-			-- gemini2_5_flash = {
-			-- 	__inherited_from = "gemini",
-			-- 	api_key_name = "GEMINI_API_KEY",
-			-- 	model = "gemini-2.5-flash",
-			-- 	max_tokens = 65536,
-			-- 	timeout = 300000,
-			-- },
-			-- gemini2_5_flash_lite = {
-			-- 	__inherited_from = "gemini",
-			-- 	api_key_name = "GEMINI_API_KEY",
-			-- 	model = "gemini-2.5-flash-lite-preview-06-17",
-			-- 	max_tokens = 8000,
-			-- 	timeout = 300000
-			-- },
-			-- },
-			-- file_selector = {
-			-- 	provider = "fzf",
-			-- 	provider_opts = {
-			-- 		get_filepaths = function(params)
-			-- 			local cwd = params.cwd
-			-- 			local selected_filepaths = params.selected_filepaths
-			-- 			local cmd = string.format("fd -H -I --base-directory '%s'", vim.fn.fnameescape(cwd))
-			-- 			local output = vim.fn.system(cmd)
-			-- 			if vim.v.shell_error ~= 0 then
-			-- 				vim.notify("Error running command to get filepaths: " .. cmd, vim.log.levels.ERROR)
-			-- 				return {}
-			-- 			end
-			-- 			local filepaths = vim.split(output, "\n", { trimempty = true })
-			-- 			return vim.iter(filepaths)
-			-- 					:filter(function(filepath)
-			-- 						return not vim.tbl_contains(selected_filepaths, filepath)
-			-- 					end)
-			-- 					:totable()
-			-- 		end,
-			-- 	},
-			-- },
 		},
 		build = "make",
 		dependencies = {
